@@ -14,5 +14,7 @@ mongoose.connect("mongodb://localhost:27017/streaming", {
 app.use("/videos", videoRoutes);
 app.use("/usuarios", usuarioRoutes);
 
+const errorHandler = require("./middlewares/errorHandler");
+app.use(errorHandler);
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
