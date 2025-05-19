@@ -2,15 +2,45 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 
 const usuarioSchema = new mongoose.Schema({
-  nome: { type: String, required: true },
-  username: { type: String, required: true, unique: true },
-  email: { type: String, required: true, unique: true },
-  senha: { type: String, required: true },
-  bio: { type: String },
-  fotoPerfilUrl: { type: String },
-  dataCriacao: { type: Date, default: Date.now },
-  inscritos: { type: Number, default: 0 },
-  assinaturas: [{ type: mongoose.Schema.Types.ObjectId, ref: "Usuario" }],
+  nome: {
+    type: String,
+    required: [true, "Nome é obrigatório."],
+  },
+  username: {
+    type: String,
+    required: [true, "Username é obrigatório."],
+    unique: true,
+  },
+  email: {
+    type: String,
+    required: [true, "Email é obrigatório."],
+    unique: true,
+    match: [/.+\@.+\..+/, "Formato de e-mail inválido."],
+  },
+  senha: {
+    type: String,
+    required: [true, "Senha é obrigatória."],
+  },
+  bio: {
+    type: String,
+  },
+  fotoPerfilUrl: {
+    type: String,
+  },
+  dataCriacao: {
+    type: Date,
+    default: Date.now,
+  },
+  inscritos: {
+    type: Number,
+    default: 0,
+  },
+  assinaturas: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Usuario",
+    },
+  ],
 });
 
 usuarioSchema.pre("save", async function (next) {
