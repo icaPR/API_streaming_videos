@@ -1,105 +1,128 @@
 const Playlist = require("../models/playlist");
+const errorHandler = require("../middlewares/errorHandler");
+const getRequestBody = require("../utils/getRequestBody");
+const { parse } = require("url");
 
-exports.inserir = async (req, res, next) => {
+exports.inserir = async (req, res) => {
   try {
-    const novaPlaylist = await Playlist.inserir(req.body);
-    res.status(201).json(novaPlaylist);
+    const body = await getRequestBody(req);
+    const novaPlaylist = await Playlist.inserir(body);
+    res.writeHead(201, { "Content-Type": "application/json" });
+    res.end(JSON.stringify(novaPlaylist));
   } catch (err) {
     err.status = 400;
-    err.message;
-    next(err);
+    errorHandler(err, req, res);
   }
 };
 
-exports.buscarPorId = async (req, res, next) => {
+exports.buscarPorId = async (req, res, id) => {
   try {
-    const playlist = await Playlist.buscarPorId(req.params.id);
-    if (!playlist)
-      return res.status(404).json({ erro: "Playlist não encontrada" });
-    res.json(playlist);
+    const playlist = await Playlist.buscarPorId(id);
+    if (!playlist) {
+      res.writeHead(404, { "Content-Type": "application/json" });
+      return res.end(JSON.stringify({ erro: "Playlist não encontrada" }));
+    }
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify(playlist));
   } catch (err) {
     err.status = 400;
     err.message = "Erro ao buscar playlist por ID.";
-    next(err);
+    errorHandler(err, req, res);
   }
 };
 
-exports.buscarPorUsuario = async (req, res, next) => {
+exports.buscarPorUsuario = async (req, res, usuarioId) => {
   try {
-    const playlists = await Playlist.buscarPorUsuario(req.params.usuarioId);
-    res.json(playlists);
+    const playlists = await Playlist.buscarPorUsuario(usuarioId);
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify(playlists));
   } catch (err) {
     err.status = 400;
     err.message = "Erro ao buscar playlists do usuário.";
-    next(err);
+    errorHandler(err, req, res);
   }
 };
 
-exports.buscar = async (req, res, next) => {
+exports.buscar = async (req, res) => {
   try {
-    const filtros = req.query;
-    const playlists = await Playlist.buscar(filtros);
-    res.json(playlists);
+    const { query } = parse(req.url, true);
+    const playlists = await Playlist.buscar(query);
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify(playlists));
   } catch (err) {
     err.status = 400;
     err.message = "Erro ao buscar playlists.";
-    next(err);
+    errorHandler(err, req, res);
   }
 };
 
-exports.atualizar = async (req, res, next) => {
+exports.atualizar = async (req, res, id) => {
   try {
-    const playlist = await Playlist.atualizar(req.params.id, req.body);
-    if (!playlist)
-      return res.status(404).json({ erro: "Playlist não encontrada" });
-    res.json(playlist);
+    const body = await getRequestBody(req);
+    const playlist = await Playlist.atualizar(id, body);
+    if (!playlist) {
+      res.writeHead(404, { "Content-Type": "application/json" });
+      return res.end(JSON.stringify({ erro: "Playlist não encontrada" }));
+    }
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify(playlist));
   } catch (err) {
     err.status = 400;
-    err.message;
-    next(err);
+    errorHandler(err, req, res);
   }
 };
 
-exports.adicionarVideo = async (req, res, next) => {
+exports.adicionarVideo = async (req, res, id) => {
   try {
-    const playlist = await Playlist.findById(req.params.id);
-    if (!playlist)
-      return res.status(404).json({ erro: "Playlist não encontrada" });
+    const playlist = await Playlist.findById(id);
+    if (!playlist) {
+      res.writeHead(404, { "Content-Type": "application/json" });
+      return res.end(JSON.stringify({ erro: "Playlist não encontrada" }));
+    }
 
-    await playlist.adicionarVideo(req.body.videoId);
-    res.json(playlist);
+    const body = await getRequestBody(req);
+    await playlist.adicionarVideo(body.videoId);
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify(playlist));
   } catch (err) {
     err.status = 400;
     err.message = "Erro ao adicionar vídeo à playlist.";
-    next(err);
+    errorHandler(err, req, res);
   }
 };
 
-exports.removerVideo = async (req, res, next) => {
+exports.removerVideo = async (req, res, id) => {
   try {
-    const playlist = await Playlist.findById(req.params.id);
-    if (!playlist)
-      return res.status(404).json({ erro: "Playlist não encontrada" });
+    const playlist = await Playlist.findById(id);
+    if (!playlist) {
+      res.writeHead(404, { "Content-Type": "application/json" });
+      return res.end(JSON.stringify({ erro: "Playlist não encontrada" }));
+    }
 
-    await playlist.removerVideo(req.body.videoId);
-    res.json(playlist);
+    const body = await getRequestBody(req);
+    await playlist.removerVideo(body.videoId);
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify(playlist));
   } catch (err) {
     err.status = 400;
     err.message = "Erro ao remover vídeo da playlist.";
-    next(err);
+    errorHandler(err, req, res);
   }
 };
 
-exports.deletar = async (req, res, next) => {
+exports.deletar = async (req, res, id) => {
   try {
-    const playlist = await Playlist.deletar(req.params.id);
-    if (!playlist)
-      return res.status(404).json({ erro: "Playlist não encontrada" });
+    const playlist = await Playlist.deletar(id);
+    if (!playlist) {
+      res.writeHead(404, { "Content-Type": "application/json" });
+      return res.end(JSON.stringify({ erro: "Playlist não encontrada" }));
+    }
 
-    res.json({ mensagem: "Playlist deletada com sucesso" });
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ mensagem: "Playlist deletada com sucesso" }));
   } catch (err) {
     err.status = 400;
     err.message = "Erro ao deletar playlist.";
-    next(err);
+    errorHandler(err, req, res);
   }
 };

@@ -1,121 +1,146 @@
 const Video = require("../models/video");
+const errorHandler = require("../middlewares/errorHandler");
+const getRequestBody = require("../utils/getRequestBody");
+const { parse } = require("url");
 
 module.exports = {
-  async inserir(req, res, next) {
+  async inserir(req, res) {
     try {
-      const novoVideo = await Video.create(req.body);
-      res.status(201).json(novoVideo);
+      const body = await getRequestBody(req);
+      const novoVideo = await Video.create(body);
+      res.writeHead(201, { "Content-Type": "application/json" });
+      res.end(JSON.stringify(novoVideo));
     } catch (err) {
       err.status = 400;
-      err.message;
-      next(err);
+      errorHandler(err, req, res);
     }
   },
 
-  async buscarPorId(req, res, next) {
+  async buscarPorId(req, res, id) {
     try {
-      const video = await Video.findById(req.params.id);
-      if (!video)
-        return res.status(404).json({ error: "Vídeo não encontrado." });
-      res.json(video);
+      const video = await Video.findById(id);
+      if (!video) {
+        res.writeHead(404, { "Content-Type": "application/json" });
+        return res.end(JSON.stringify({ error: "Vídeo não encontrado." }));
+      }
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify(video));
     } catch (err) {
       err.status = 500;
       err.message = "Erro ao buscar vídeo.";
-      next(err);
+      errorHandler(err, req, res);
     }
   },
 
-  async buscar(req, res, next) {
+  async buscar(req, res) {
     try {
+      const { query } = parse(req.url, true);
       const filtros = {};
-      if (req.query.titulo) filtros.titulo = new RegExp(req.query.titulo, "i");
-      if (req.query.categoria) filtros.categoria = req.query.categoria;
+      if (query.titulo) filtros.titulo = new RegExp(query.titulo, "i");
+      if (query.categoria) filtros.categoria = query.categoria;
+
       const videos = await Video.find(filtros);
-      res.json(videos);
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify(videos));
     } catch (err) {
       err.status = 500;
       err.message = "Erro ao buscar vídeos.";
-      next(err);
+      errorHandler(err, req, res);
     }
   },
 
-  async atualizar(req, res, next) {
+  async atualizar(req, res, id) {
     try {
-      const video = await Video.findByIdAndUpdate(req.params.id, req.body, {
-        new: true,
-      });
-      if (!video)
-        return res.status(404).json({ error: "Vídeo não encontrado." });
-      res.json(video);
+      const body = await getRequestBody(req);
+      const video = await Video.findByIdAndUpdate(id, body, { new: true });
+      if (!video) {
+        res.writeHead(404, { "Content-Type": "application/json" });
+        return res.end(JSON.stringify({ error: "Vídeo não encontrado." }));
+      }
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify(video));
     } catch (err) {
       err.status = 400;
       err.message = "Erro ao atualizar vídeo.";
-      next(err);
+      errorHandler(err, req, res);
     }
   },
 
-  async deletar(req, res, next) {
+  async deletar(req, res, id) {
     try {
-      const video = await Video.findByIdAndDelete(req.params.id);
-      if (!video)
-        return res.status(404).json({ error: "Vídeo não encontrado." });
-      res.status(204).send();
+      const video = await Video.findByIdAndDelete(id);
+      if (!video) {
+        res.writeHead(404, { "Content-Type": "application/json" });
+        return res.end(JSON.stringify({ error: "Vídeo não encontrado." }));
+      }
+      res.writeHead(204);
+      res.end();
     } catch (err) {
       err.status = 400;
       err.message = "Erro ao deletar vídeo.";
-      next(err);
+      errorHandler(err, req, res);
     }
   },
 
-  async incrementarVisualizacao(req, res, next) {
+  async incrementarVisualizacao(req, res, id) {
     try {
       const video = await Video.findByIdAndUpdate(
-        req.params.id,
+        id,
         { $inc: { visualizacoes: 1 } },
         { new: true }
       );
-      if (!video)
-        return res.status(404).json({ error: "Vídeo não encontrado." });
-      res.json(video);
+      if (!video) {
+        res.writeHead(404, { "Content-Type": "application/json" });
+        return res.end(JSON.stringify({ error: "Vídeo não encontrado." }));
+      }
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify(video));
     } catch (err) {
       err.status = 500;
       err.message = "Erro ao incrementar visualização.";
-      next(err);
+      errorHandler(err, req, res);
     }
   },
 
-  async adicionarLike(req, res, next) {
+  async adicionarLike(req, res, id) {
     try {
       const video = await Video.findByIdAndUpdate(
-        req.params.id,
+        id,
         { $inc: { likes: 1 } },
         { new: true }
       );
-      if (!video)
-        return res.status(404).json({ error: "Vídeo não encontrado." });
-      res.json(video);
+      if (!video) {
+        res.writeHead(404, { "Content-Type": "application/json" });
+        return res.end(JSON.stringify({ error: "Vídeo não encontrado." }));
+      }
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify(video));
     } catch (err) {
       err.status = 500;
       err.message = "Erro ao adicionar like.";
-      next(err);
+      errorHandler(err, req, res);
     }
   },
 
-  async removerLike(req, res, next) {
+  async removerLike(req, res, id) {
     try {
-      const video = await Video.findById(req.params.id);
-      if (!video)
-        return res.status(404).json({ error: "Vídeo não encontrado." });
+      const video = await Video.findById(id);
+      if (!video) {
+        res.writeHead(404, { "Content-Type": "application/json" });
+        return res.end(JSON.stringify({ error: "Vídeo não encontrado." }));
+      }
 
       if (video.likes > 0) {
         video.likes--;
         await video.save();
       }
-      res.json(video);
+
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify(video));
     } catch (err) {
       err.status = 500;
       err.message = "Erro ao remover like.";
-      next(err);
+      errorHandler(err, req, res);
     }
   },
 };

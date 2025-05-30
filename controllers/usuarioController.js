@@ -1,111 +1,139 @@
 const Usuario = require("../models/usuario");
+const errorHandler = require("../middlewares/errorHandler");
+const getRequestBody = require("../utils/getRequestBody");
+const { parse } = require("url");
 
-exports.inserir = async (req, res, next) => {
+exports.inserir = async (req, res) => {
   try {
-    const novoUsuario = await Usuario.inserir(req.body);
-    res.status(201).json(novoUsuario);
+    const body = await getRequestBody(req);
+    const novoUsuario = await Usuario.inserir(body);
+    res.writeHead(201, { "Content-Type": "application/json" });
+    res.end(JSON.stringify(novoUsuario));
   } catch (err) {
     err.status = 400;
-    err.message;
-    next(err);
+    errorHandler(err, req, res);
   }
 };
 
-exports.buscarPorId = async (req, res, next) => {
+exports.buscarPorId = async (req, res, id) => {
   try {
-    const usuario = await Usuario.buscarPorId(req.params.id);
-    if (!usuario)
-      return res.status(404).json({ erro: "Usuário não encontrado" });
-    res.json(usuario);
+    const usuario = await Usuario.buscarPorId(id);
+    if (!usuario) {
+      res.writeHead(404, { "Content-Type": "application/json" });
+      return res.end(JSON.stringify({ erro: "Usuário não encontrado" }));
+    }
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify(usuario));
   } catch (err) {
     err.status = 400;
     err.message = "Erro ao buscar usuário por ID.";
-    next(err);
+    errorHandler(err, req, res);
   }
 };
 
-exports.buscarPorUsername = async (req, res, next) => {
+exports.buscarPorUsername = async (req, res, username) => {
   try {
-    const usuario = await Usuario.buscarPorUsername(req.params.username);
-    if (!usuario)
-      return res.status(404).json({ erro: "Usuário não encontrado" });
-    res.json(usuario);
+    const usuario = await Usuario.buscarPorUsername(username);
+    if (!usuario) {
+      res.writeHead(404, { "Content-Type": "application/json" });
+      return res.end(JSON.stringify({ erro: "Usuário não encontrado" }));
+    }
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify(usuario));
   } catch (err) {
     err.status = 400;
     err.message = "Erro ao buscar usuário por username.";
-    next(err);
+    errorHandler(err, req, res);
   }
 };
 
-exports.atualizar = async (req, res, next) => {
+exports.atualizar = async (req, res, id) => {
   try {
-    const usuario = await Usuario.atualizar(req.params.id, req.body);
-    if (!usuario)
-      return res.status(404).json({ erro: "Usuário não encontrado" });
-    res.json(usuario);
+    const body = await getRequestBody(req);
+    const usuario = await Usuario.atualizar(id, body);
+    if (!usuario) {
+      res.writeHead(404, { "Content-Type": "application/json" });
+      return res.end(JSON.stringify({ erro: "Usuário não encontrado" }));
+    }
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify(usuario));
   } catch (err) {
     err.status = 400;
     err.message = "Erro ao atualizar usuário.";
-    next(err);
+    errorHandler(err, req, res);
   }
 };
 
-exports.inscrever = async (req, res, next) => {
+exports.inscrever = async (req, res, id) => {
   try {
-    const usuario = await Usuario.findById(req.params.id);
-    if (!usuario)
-      return res.status(404).json({ erro: "Usuário não encontrado" });
+    const usuario = await Usuario.findById(id);
+    if (!usuario) {
+      res.writeHead(404, { "Content-Type": "application/json" });
+      return res.end(JSON.stringify({ erro: "Usuário não encontrado" }));
+    }
 
-    await usuario.inscrever(req.body.canalId);
-    res.json(usuario);
+    const body = await getRequestBody(req);
+    await usuario.inscrever(body.canalId);
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify(usuario));
   } catch (err) {
     err.status = 400;
     err.message = "Erro ao inscrever usuário no canal.";
-    next(err);
+    errorHandler(err, req, res);
   }
 };
 
-exports.desinscrever = async (req, res, next) => {
+exports.desinscrever = async (req, res, id) => {
   try {
-    const usuario = await Usuario.findById(req.params.id);
-    if (!usuario)
-      return res.status(404).json({ erro: "Usuário não encontrado" });
+    const usuario = await Usuario.findById(id);
+    if (!usuario) {
+      res.writeHead(404, { "Content-Type": "application/json" });
+      return res.end(JSON.stringify({ erro: "Usuário não encontrado" }));
+    }
 
-    await usuario.desinscrever(req.body.canalId);
-    res.json(usuario);
+    const body = await getRequestBody(req);
+    await usuario.desinscrever(body.canalId);
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify(usuario));
   } catch (err) {
     err.status = 400;
     err.message = "Erro ao desinscrever usuário do canal.";
-    next(err);
+    errorHandler(err, req, res);
   }
 };
 
-exports.incrementarInscritos = async (req, res, next) => {
+exports.incrementarInscritos = async (req, res, id) => {
   try {
-    const usuario = await Usuario.findById(req.params.id);
-    if (!usuario)
-      return res.status(404).json({ erro: "Usuário não encontrado" });
+    const usuario = await Usuario.findById(id);
+    if (!usuario) {
+      res.writeHead(404, { "Content-Type": "application/json" });
+      return res.end(JSON.stringify({ erro: "Usuário não encontrado" }));
+    }
 
     await usuario.incrementarInscritos();
-    res.json(usuario);
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify(usuario));
   } catch (err) {
     err.status = 400;
     err.message = "Erro ao incrementar inscritos.";
-    next(err);
+    errorHandler(err, req, res);
   }
 };
 
-exports.decrementarInscritos = async (req, res, next) => {
+exports.decrementarInscritos = async (req, res, id) => {
   try {
-    const usuario = await Usuario.findById(req.params.id);
-    if (!usuario)
-      return res.status(404).json({ erro: "Usuário não encontrado" });
+    const usuario = await Usuario.findById(id);
+    if (!usuario) {
+      res.writeHead(404, { "Content-Type": "application/json" });
+      return res.end(JSON.stringify({ erro: "Usuário não encontrado" }));
+    }
 
     await usuario.decrementarInscritos();
-    res.json(usuario);
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify(usuario));
   } catch (err) {
     err.status = 400;
     err.message = "Erro ao decrementar inscritos.";
-    next(err);
+    errorHandler(err, req, res);
   }
 };
