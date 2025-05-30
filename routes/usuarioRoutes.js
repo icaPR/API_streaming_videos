@@ -1,20 +1,29 @@
-const express = require("express");
-const router = express.Router();
+const { parse } = require("url");
 const usuarioController = require("../controllers/usuarioController");
 
-router.post("/", usuarioController.inserir);
-router.get("/:id", usuarioController.buscarPorId);
-router.get("/username/:username", usuarioController.buscarPorUsername);
-router.put("/:id", usuarioController.atualizar);
-router.post("/:id/inscrever", usuarioController.inscrever);
-router.post("/:id/desinscrever", usuarioController.desinscrever);
-router.post(
-  "/:id/incrementar-inscritos",
-  usuarioController.incrementarInscritos
-);
-router.post(
-  "/:id/decrementar-inscritos",
-  usuarioController.decrementarInscritos
-);
+module.exports = async (req, res) => {
+  const { pathname } = parse(req.url, true);
+  const idMatch = pathname.match(/^\/usuarios\/([^\/]+)/);
+  const usernameMatch = pathname.match(/^\/usuarios\/username\/([^\/]+)/);
 
-module.exports = router;
+  if (req.method === "POST" && pathname === "/usuarios") {
+    return usuarioController.inserir(req, res);
+  } else if (req.method === "GET" && idMatch) {
+    return usuarioController.buscarPorId(req, res, idMatch[1]);
+  } else if (req.method === "GET" && usernameMatch) {
+    return usuarioController.buscarPorUsername(req, res, usernameMatch[1]);
+  } else if (req.method === "PUT" && idMatch) {
+    return usuarioController.atualizar(req, res, idMatch[1]);
+  } else if (pathname.endsWith("/inscrever")) {
+    return usuarioController.inscrever(req, res, idMatch[1]);
+  } else if (pathname.endsWith("/desinscrever")) {
+    return usuarioController.desinscrever(req, res, idMatch[1]);
+  } else if (pathname.endsWith("/incrementar-inscritos")) {
+    return usuarioController.incrementarInscritos(req, res, idMatch[1]);
+  } else if (pathname.endsWith("/decrementar-inscritos")) {
+    return usuarioController.decrementarInscritos(req, res, idMatch[1]);
+  }
+
+  res.writeHead(404);
+  res.end("Rota de usuário não encontrada.");
+};
