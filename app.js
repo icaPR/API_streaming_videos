@@ -3,9 +3,14 @@ const mongoose = require("mongoose");
 const videoRoutes = require("./routes/videoRoutes");
 const usuarioRoutes = require("./routes/usuarioRoutes");
 const playlistRoutes = require("./routes/playlistRoutes");
+const cookieParser = require("cookie-parser");
+
+require("dotenv").config();
 
 const app = express();
+
 app.use(express.json());
+app.use(cookieParser());
 
 mongoose.connect("mongodb://localhost:27017/streaming", {
   useNewUrlParser: true,
