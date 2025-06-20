@@ -1,4 +1,7 @@
 const Usuario = require("../models/usuario");
+const jwt = require("jsonwebtoken");
+require("dotenv").config();
+const JWT_SECRET = process.env.JWT_SECRET;
 
 exports.inserir = async (req, res, next) => {
   try {
@@ -7,6 +10,48 @@ exports.inserir = async (req, res, next) => {
   } catch (err) {
     err.status = 400;
     err.message;
+    next(err);
+  }
+};
+
+exports.acessar = async (req, res, next) => {
+  const { email, senha } = req.body;
+  try {
+    const usuarioLogado = await Usuario.acessar(email, senha);
+    const payload = {
+      id: usuarioLogado._id,
+      username: usuarioLogado.username,
+      email: usuarioLogado.email,
+    };
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: "1h" });
+
+    res.cookie("access_token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "prod",
+      sameSite: "Lax",
+      maxAge: 60 * 60 * 1000, //  (1 hora)
+    });
+    res.status(200).json({
+      message: "Login bem-sucedido!",
+      usuario: {
+        id: usuarioLogado._id,
+        nome: usuarioLogado.nome,
+        username: usuarioLogado.username,
+        email: usuarioLogado.email,
+        bio: usuarioLogado.bio,
+        fotoPerfilUrl: usuarioLogado.fotoPerfilUrl,
+      },
+      token,
+    });
+  } catch (err) {
+    if (
+      err.message === "Usuário não encontrado." ||
+      err.message === "Credenciais inválidas."
+    ) {
+      err.status = 401;
+    } else {
+      err.status = 500;
+    }
     next(err);
   }
 };

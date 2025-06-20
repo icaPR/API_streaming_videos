@@ -53,6 +53,19 @@ usuarioSchema.statics.inserir = async function (dados) {
   return this.create(dados);
 };
 
+usuarioSchema.statics.acessar = async function (email, senha) {
+  const usuario = await this.findOne({ email });
+  if (!usuario) {
+    throw new Error("Usuário não encontrado.");
+  }
+  const isMatch = await bcrypt.compare(senha, usuario.senha);
+
+  if (!isMatch) {
+    throw new Error("Credenciais inválidas.");
+  }
+  return usuario;
+};
+
 usuarioSchema.statics.buscarPorId = function (id) {
   return this.findById(id);
 };
