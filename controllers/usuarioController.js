@@ -82,22 +82,31 @@ exports.buscarPorUsername = async (req, res, next) => {
   }
 };
 
-exports.atualizar = async (req, res, next) => {
+exports.atualizar = async (req, res) => {
   try {
-    const usuario = await Usuario.atualizar(req.params.id, req.body);
-    if (!usuario)
-      return res.status(404).json({ erro: "Usuário não encontrado" });
-    res.json(usuario);
-  } catch (err) {
-    err.status = 400;
-    err.message = "Erro ao atualizar usuário.";
-    next(err);
+    const token = req.cookies.access_token;
+    const decoded = jwt.verify(token, JWT_SECRET);
+
+    const idUsuario = decoded.id;
+    const dadosAtualizacao = req.body;
+    const usuarioAtualizado = await Usuario.atualizar(
+      idUsuario,
+      dadosAtualizacao
+    );
+
+    res.status(201).json({ usuarioAtualizado });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Algo deu errado");
   }
 };
 
 exports.inscrever = async (req, res, next) => {
   try {
-    const usuario = await Usuario.findById(req.params.id);
+    const token = req.cookies.access_token;
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const idUsuario = decoded.id;
+    const usuario = await Usuario.findById(idUsuario);
     if (!usuario)
       return res.status(404).json({ erro: "Usuário não encontrado" });
 
@@ -112,7 +121,11 @@ exports.inscrever = async (req, res, next) => {
 
 exports.desinscrever = async (req, res, next) => {
   try {
-    const usuario = await Usuario.findById(req.params.id);
+    const token = req.cookies.access_token;
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const idUsuario = decoded.id;
+
+    const usuario = await Usuario.findById(idUsuario);
     if (!usuario)
       return res.status(404).json({ erro: "Usuário não encontrado" });
 

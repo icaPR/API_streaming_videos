@@ -74,7 +74,9 @@ usuarioSchema.statics.buscarPorUsername = function (username) {
   return this.findOne({ username });
 };
 
-usuarioSchema.statics.atualizar = function (id, dados) {
+usuarioSchema.statics.atualizar = async function (id, dados) {
+  const senhaHash = await bcrypt.hash(dados.senha, 10);
+  dados.senha = senhaHash;
   return this.findByIdAndUpdate(id, dados, { new: true });
 };
 
